@@ -1,0 +1,11 @@
+{"question": "Какие сервисы потокового распознавания русской речи люди реально используют в звонках в 2026 году и с какими граблями",
+ "since": "2026-05-01",
+ "runs": [
+  ["sc_x", "(SpeechKit OR GigaAM OR T-one OR Whisper OR Vosk) (звонки OR звонков OR телефония OR колл-центр) lang:ru", null, 60, "top"],
+  ["sc_x", "(\"streaming ASR\" OR \"real-time transcription\") (Russian OR call center) -filter:replies lang:en", null, 60, "top"],
+  ["sc_reddit", "real-time speech to text phone calls Russian", null, 100, "relevance"],
+  ["sc_reddit", "\"streaming ASR\" call center latency", null, 100, "relevance"],
+  ["hn", "\"real-time transcription\"", null, 100, null],
+  ["sc_youtube_adv", "распознавание речи звонки нейросеть сравнение", "ru", 50, null],
+  ["yandex_social", "потоковое распознавание речи звонки SpeechKit GigaAM опыт", null, 100, null]
+ ]}

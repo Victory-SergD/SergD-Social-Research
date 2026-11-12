@@ -1,0 +1,26 @@
+# Секреты — никогда в git (ключи живут в ~/.config/sergd-social/ или в папке SOCIAL_RESEARCH_KEYS)
+*.env
+*.env.*
+!*.env.example
+keys/
+*.key
+*secret*
+!scripts/check_secrets.py
+*token*
+survey_path
+llm_local.json
+*.pem
+.envrc
+
+# Ваши данные — только локально: вопросы (бывают личными), сырые ответы API, тексты постов, документы
+data/
+runs/
+briefs/
+reports/
+
+# Служебное
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+*.log

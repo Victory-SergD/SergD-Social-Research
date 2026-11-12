@@ -56,5 +56,5 @@ def search(source, query, since=None, lang=None, limit=200, tag="adhoc", sort=No
                   "credits_unit": "vk (вызовы)", "usd": 0.0, "balance_after": None, "raw_file": None, "error": err}
 
 
-SOURCES = {"vk_posts": {"fn": search, "reserve": 6, "langs": "ru", "status": "untested",
-                        "about": "VK: посты по всему ВКонтакте (newsfeed.search), до 1 000 на запрос, бесплатно"}}
+SOURCES = {"vk_posts": {"fn": search, "reserve": 6, "langs": "ru", "status": "broken",
+                        "about": "VK: newsfeed.search закрыт сервисному ключу (ошибка 1051) — нужен пользовательский токен"}}

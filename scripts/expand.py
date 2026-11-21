@@ -109,7 +109,7 @@ def _short(r):
     return t[:260]
 
 
-def topic_filter(q, items):
+def topic_filter(q, items, safe=False):
     """AI-first: одна дешёвая модель LLM-бэкенда решает, какие ветки по теме вопроса (заголовок + начало).
     items: [(ключ, площадка, текст)]. → множество ключей по теме | None при сбое (тогда — консервативный отбор)."""
     if not items:
@@ -117,6 +117,9 @@ def topic_filter(q, items):
     try:
         from _llm import backend  # noqa: E402  тот же LLM-бэкенд, что у opinions.py
         survey = backend()
+        if safe:  # спорная тема: без моделей OpenAI (QUOTER_SAFE), см. _llm.safe_quoter
+            from _llm import safe_quoter  # noqa: E402
+            survey.QUOTER = safe_quoter(survey)
         rows = "\n".join(f"{n} | {pl} | {t}" for n, (_, pl, t) in enumerate(items, 1))
         # запасные модели — свои у бэкенда (TOPIC_FALLBACK), если заданы: бывает «200 без JSON» у основной
         j = survey.llm(TOPIC_PROMPT.format(q=q, rows=rows), (*survey.QUOTER, *getattr(survey, "TOPIC_FALLBACK", ())), 4000, 120)
@@ -208,6 +211,7 @@ def main():
     ap.add_argument("--max-tw", type=int, help="кредитов twitterapi на этот шаг (по умолчанию — остаток бюджета запуска)")
     ap.add_argument("--no-llm", action="store_true", help="не звать модель «по теме ли ветка» (консервативный отбор)")
     ap.add_argument("--dry-run", action="store_true", help="только план; модель не зовётся, отбор консервативный")
+    ap.add_argument("--safe", action="store_true", help="спорная тема: отбор веток моделью без OpenAI (QUOTER_SAFE)")
     a = ap.parse_args()
     rd = Path(a.run_dir).resolve()
     out = rd / "work"
@@ -229,7 +233,7 @@ def main():
     hpool = hn_cands(recs, a, done_threads)[:3 * a.hn]
     items = ([(r["url_norm"], "reddit", _short(r)) for r in rpool] + [(r["url_norm"], "youtube", _short(r)) for r in ypool]
              + [("hn:" + h["sid"], "hackernews", h["title"][:260]) for h in hpool])
-    ok = None if (a.dry_run or a.no_llm) else topic_filter(meta.get("question", ""), items)
+    ok = None if (a.dry_run or a.no_llm) else topic_filter(meta.get("question", ""), items, safe=a.safe)
     if ok is None:
         how = "консервативно (без модели)"
         rc = conservative(rpool, a.reddit)

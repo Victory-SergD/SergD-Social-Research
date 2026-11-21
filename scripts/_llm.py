@@ -39,3 +39,15 @@ def _pick():
             return survey
     import llm_backend  # noqa: E402
     return llm_backend
+
+
+def safe_quoter(b):
+    """Цепочка цитатчика без моделей OpenAI для спорных тем (--safe): QUOTER_SAFE бэкенда, если он есть.
+    У моделей OpenAI правила контента строже: спорная тема (например, несовершеннолетние персонажи) может закрыть
+    доступ к ним на аккаунте провайдера."""
+    s = getattr(b, "QUOTER_SAFE", None)
+    if not s:
+        s = tuple(m for m in b.QUOTER if "openai/" not in m)
+        print("[_llm] у бэкенда нет QUOTER_SAFE — беру QUOTER без моделей OpenAI" + ("" if s else ": пусто, оставляю QUOTER"),
+              file=sys.stderr)
+    return tuple(s) or tuple(b.QUOTER)

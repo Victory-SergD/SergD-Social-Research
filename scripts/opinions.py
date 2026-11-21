@@ -376,6 +376,7 @@ def add_quotes(q, posts, cmap, rows, workers):
         raw = {c: next((o for o in p["x"]["options"] if canon_of(o) == c), {"name": c}) for c in canons}
         lst = "\n".join(f"{n}. {raw[c]['name']}" for n, c in enumerate(canons, 1))
         j = llm(QUOTE_PROMPT.format(q=q, text=clip(p["text"], TEXT_LIMIT - 500, 500), lst=lst), survey.QUOTER, 3000) or {}
+        who = getattr(survey._TL, "served", None) if j else None  # кто ответил: потеря цитат не молчаливая
         got, text = 0, _norm(p["text"])
         for it in j.get("items") or []:
             if isinstance(it, dict) and isinstance(it.get("n"), int) and 1 <= it["n"] <= len(canons):
@@ -386,11 +387,16 @@ def add_quotes(q, posts, cmap, rows, workers):
                          "stance": it.get("stance") if it.get("stance") in ("pro", "contra", "neutral") else "neutral",
                          "platform": p["platform"], "date": p["date"]})
                     got += 1
-        return got
+        return got, who
 
     with cf.ThreadPoolExecutor(workers) as ex:
-        n = sum(ex.map(one, list(want)))
+        res = list(ex.map(one, list(want)))
+    n, served = sum(g for g, _ in res), collections.Counter(w for _, w in res)
     print(f"цитаты: {len(want)} постов, {n} цитат сверено с текстом", flush=True)
+    lost = served.get(None, 0)
+    print("  цитатчик: " + ", ".join(f"{m or 'никто (сбой)'} {k}" for m, k in served.most_common())
+          + (f" — ВНИМАНИЕ: {lost} из {len(want)} постов без ответа модели (403/сбой?), «почему» будет пустым" if lost else ""),
+          flush=True)
     return n
 
 
@@ -436,7 +442,13 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--from-extract", action="store_true",
                     help="не звать сводчиков: взять выписку из work/extract.json (пересчёт слияния, цитат, итога)")
+    ap.add_argument("--safe", action="store_true",
+                    help="спорная тема: цитатчик без моделей OpenAI (QUOTER_SAFE) — их правила контента строже")
     a = ap.parse_args()
+    if a.safe:
+        from _llm import safe_quoter  # noqa: E402
+        survey.QUOTER = safe_quoter(survey)
+        print(f"--safe: цитатчик {', '.join(survey.QUOTER)}", flush=True)
     rd, meta, recs, marks = load(a.run_dir)
     q = meta["question"]
     posts = []

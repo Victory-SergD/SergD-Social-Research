@@ -33,6 +33,7 @@ def _env_models(name, default):
 OR = "openrouter:"
 WRITER, WRITER_FALLBACK = (_env_models("SOCIAL_LLM_WRITER", (OR + "anthropic/claude-sonnet-5.5", OR + "openai/gpt-5.4")) + (None,))[:2]
 QUOTER = _env_models("SOCIAL_LLM_QUOTER", (OR + "openai/gpt-5.4-mini", OR + "openai/gpt-5.4"))
+QUOTER_SAFE = _env_models("SOCIAL_LLM_QUOTER_SAFE", (OR + "anthropic/claude-haiku-5.5", OR + "anthropic/claude-sonnet-5.5"))  # без OpenAI, для спорных тем (--safe)
 CANON_CHEAP = _env_models("SOCIAL_LLM_CANON", (OR + "deepseek/deepseek-v4-flash", OR + "openai/gpt-5.4-mini"))
 # Два независимых сводчика (основной, запасной) — разные семейства, чтобы не повторять ошибки друг друга.
 SOCIAL_EXTRACTORS = (
